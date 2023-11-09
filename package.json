@@ -1,0 +1,16 @@
+{
+  "name": "fem_api",
+  "version": "1.0.0",
+  "description": "API of Feminist Quotes from Inspiring Women",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Arianna Choza",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.1",
+    "cheerio": "^1.0.0-rc.12",
+    "express": "^4.18.2"
+  }
+}

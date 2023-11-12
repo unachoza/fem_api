@@ -22,6 +22,13 @@ const websiteStylist = "https://www.stylist.co.uk/books/quotes/most-empowering-f
 const websiteParade = "https://parade.com/971993/marynliles/feminist-quotes/"
 const resultFromScrape = []
  
+
+const resultsFromCosmo = []
+axios.get(websiteCosmo)
+.then(res => {
+    const html =  res.data
+    const $ = cheerio.load(html)
+})
 const harperScrape = []
 // app.get('/harperq', (req, res) => {
     axios.get(websiteHarpers)

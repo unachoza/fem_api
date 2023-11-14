@@ -9,10 +9,8 @@ app.get('/', (req, res) => {
     res.json('find quotes here')
 })
 
-const websiteParade = "https://parade.com/971993/marynliles/feminist-quotes/"
 const websiteAudible = "https://www.audible.com/blog/quotes-feminist"
 const audibleScrape = []
-
 axios.get(websiteAudible)
 .then(res => {
     const html =  res.data
@@ -23,8 +21,9 @@ axios.get(websiteAudible)
         let comma = quoteAndAuthor.lastIndexOf(",") -3
         quoteAndAuthor = quoteAndAuthor.substring((quoteAndAuthor.indexOf("."))+ 1)
         let author = quoteAndAuthor.substring((hyphen) - 1 ,comma + 1)
+        let quote = quoteAndAuthor.substring(0, hyphen - 3)
         audibleScrape.push({
-            quote: quoteAndAuthor,
+            quote,
             author
         })
 

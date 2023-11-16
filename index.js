@@ -19,8 +19,23 @@ const websiteStylist = "https://www.stylist.co.uk/books/quotes/most-empowering-f
 const websiteParade = "https://parade.com/971993/marynliles/feminist-quotes/"
 const resultFromScrape = []
  
-/// write replace function with regex
-// .replace(/\n/g, "")
+
+const cleanStrings = (string) => {
+     string = (string.replace(/\n/g, "")).replace(/―/g, "")
+     let newString = string.trim()
+     return newString
+}
+
+const removeDuplicateEntries = (dataArray) => {
+    const cleanDataArray = []
+    dataArray.forEach(obj => {
+        let entry = Object.fromEntries(Object.entries(obj).filter(([_, obj]) => obj != ""));
+        if(Object.keys(entry).length > 1){
+            cleanDataArray.push(entry)
+        }
+      })
+      return cleanDataArray
+}
 
 const resultsFromCosmo = []
 axios.get(websiteCosmo)
@@ -29,27 +44,22 @@ axios.get(websiteCosmo)
     const $ = cheerio.load(html)
     $(".css-106f026", html).each(function() {
         let text = $(this).text()
-        console.log({text})
         let quote = ""
         if(text.includes(")")){
-            console.log(true)
-            // console.log(text.indexOf(")"))
             quote = text.substring(text.indexOf(")")+1)
-            console.log({quote})
         }
         let author = ""
         if(text.includes("– ")){
-            // console.log(true)
             author = text.replace(/–/g, "")
-            console.log({author})
+            author = cleanStrings(author)
         }
         resultsFromCosmo.push({
             quote,
             author
         })
+        removeDuplicateEntries(resultsFromCosmo)
 
     })
-    console.log({resultsFromCosmo})
 })
 
 
@@ -124,9 +134,9 @@ axios.get(websiteGoodgoodgood)
                 let comma = text.lastIndexOf(",")
                 let quote = text.substring(0, hyphen)
                 let author = text.substring(hyphen + 2 )
-if(author.indexOf(",") !== -1){
-    author = author.substring(0, author.indexOf(","))
-}
+                if(author.indexOf(",") !== -1){
+                    author = author.substring(0, author.indexOf(","))
+                }
                 resultFromScrape.push({
                     quote,
                     author
@@ -142,7 +152,6 @@ if(author.indexOf(",") !== -1){
 
         })
 
-    //////////////////////////Works   
 app.get('/quotes', (req, res) => {
     res.json(scrapeWithOut)
 })
@@ -155,31 +164,21 @@ axios.get(websiteGoodReads)
             $('.quoteText', html).each(function () {
                 const text = $(this).text()
                 const start = text.indexOf('')
-              let words = text.substring(text.indexOf('―'), text.substring(text.indexOf(',')) )
-             let a =  text.substring("")
-             let quote =  text.substring("", text.indexOf('―' ))
-
             let q = text.substring(start + 7, text.indexOf('―' ) - 8)
-            q = q.replace(/―/g, "")
-            let trimmedQuote = q.trim()
+            q = cleanStrings(q)
             let author = text.substring(text.indexOf('―'))
-            author = author.replace(/\n/g, "")
-            author = author.replace(/―/g, "")
-            let trimmedAuthor = author.trim()
+            let trimmedAuthor = cleanStrings(author)
             if (author.indexOf(",") !== -1){
                 author = text.substring(text.indexOf('―'), text.lastIndexOf(',') )
-                author = author.replace(/\n/g, "")
-                author = author.replace(/―/g, "")
-                trimmedAuthor = author.trim()
+                trimmedAuthor = cleanStrings(author)
             }
               goodReadsQuotes.push({
-                           text: trimmedQuote,
+                           text: q,
                            author: trimmedAuthor
                         })
             })
         })
             .catch(err => console.log(err))
-        //////////////////////////Works
 
         app.get('/goodReads', (req, res) => {
 res.json(goodReadsQuotes)

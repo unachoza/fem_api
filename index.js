@@ -38,33 +38,36 @@ const removeDuplicateEntries = (dataArray) => {
 }
 
 const resultsFromCosmo = []
-axios.get(websiteCosmo)
-.then(res => {
-    const html =  res.data
-    const $ = cheerio.load(html)
-    $(".css-106f026", html).each(function() {
-        let text = $(this).text()
-        let quote = ""
-        if(text.includes(")")){
-            quote = text.substring(text.indexOf(")")+1)
-        }
-        let author = ""
-        if(text.includes("– ")){
-            author = text.replace(/–/g, "")
-            author = cleanStrings(author)
-        }
-        resultsFromCosmo.push({
-            quote,
-            author
+
+const scrapeCosomo = () => {
+    axios.get(websiteCosmo)
+    .then(res => {
+        const html =  res.data
+        const $ = cheerio.load(html)
+        $(".css-106f026", html).each(function() {
+            let text = $(this).text()
+            let quote = ""
+            if(text.includes(")")){
+                quote = text.substring(text.indexOf(")")+1)
+            }
+            let author = ""
+            if(text.includes("– ")){
+                author = text.replace(/–/g, "")
+                author = cleanStrings(author)
+            }
+            resultsFromCosmo.push({
+                quote,
+                author
+            })
+            removeDuplicateEntries(resultsFromCosmo)
+
         })
-        removeDuplicateEntries(resultsFromCosmo)
-
     })
-})
-
+}
 
 
 const harperScrape = []
+const scrapeHarper= () => {
     axios.get(websiteHarpers)
     .then((res) => {
         const html =  res.data
@@ -81,41 +84,45 @@ const harperScrape = []
             })
         })
     }).catch(err => console.log(err))
-// })
+    allQuotes = [...allQuotes, ...harperScrape]
+}
 
 app.get("/goal", (req, res)=> {
-    res.json(harperScrape)
+    res.json(resultsFromCosmo)
 })
 
 
 //////////////////////////Works
 const elevateQuotes = []
-app.get('/ellevatenetwork', (req, res) => {
-    axios.get('https://www.ellevatenetwork.com/articles/8013-inspirational-quotes-from-black-women-pioneers')
-    .then((response) => {  const html = response.data
-      const $ = cheerio.load(html)
-      $('.formatted-content', html).each(function () {
-        $(this).find('p').each(function () {
-          herQuote = $(this).text()
-          herName = herQuote.substring(herQuote.indexOf("-") + 2)
-          herQuote = herQuote.substring(0, herQuote.indexOf("-"))
-          elevateQuotes.push({
-            quote: herQuote,
-            author: herName,
+let elevateNoDupes = []
+const scrapeElevate = () => {
+    app.get('/ellevatenetwork', (req, res) => {
+        axios.get('https://www.ellevatenetwork.com/articles/8013-inspirational-quotes-from-black-women-pioneers')
+        .then((response) => {  const html = response.data
+          const $ = cheerio.load(html)
+          $('.formatted-content', html).each(function () {
+            $(this).find('p').each(function () {
+              herQuote = $(this).text()
+              herName = herQuote.substring(herQuote.indexOf("-") + 2)
+              herQuote = herQuote.substring(0, herQuote.indexOf("-"))
+              elevateQuotes.push({
+                quote: herQuote,
+                author: herName,
+              })
+            });
+         
           })
-        });
-     
-      })
-
-      let elevateNoDupes = []
-      elevateQuotes.forEach(w => {
-        let women = Object.fromEntries(Object.entries(w).filter(([_, w]) => w != ""));
-        elevateNoDupes.push(women)
-      })
-
-      res.json(elevateNoDupes)
-    }).catch(err => { console.log(err) })
-})
+    
+          elevateQuotes.forEach(w => {
+            let women = Object.fromEntries(Object.entries(w).filter(([_, w]) => w != ""));
+            elevateNoDupes.push(women)
+          })
+    
+          res.json(elevateNoDupes)
+        }).catch(err => { console.log(err) })
+    })
+    allQuotes = [...allQuotes, ...elevateNoDupes]
+}
 
 
 app.get('/harpersQuotes', (req, res) => {
@@ -123,65 +130,96 @@ app.get('/harpersQuotes', (req, res) => {
     })
     
     const scrapeWithOut = []
-axios.get(websiteGoodgoodgood)
-        .then(response => {
-            const html = response.data
-            const $ = cheerio.load(html)
-            
-            $('p', html).each(function () {
-                const text = $(this).text()
-                let hyphen = text.lastIndexOf("—")
-                let comma = text.lastIndexOf(",")
-                let quote = text.substring(0, hyphen)
-                let author = text.substring(hyphen + 2 )
-                if(author.indexOf(",") !== -1){
-                    author = author.substring(0, author.indexOf(","))
-                }
-                resultFromScrape.push({
-                    quote,
-                    author
-                 })
+const scrapeGoodGood = () => {
+    axios.get(websiteGoodgoodgood)
+            .then(response => {
+                const html = response.data
+                const $ = cheerio.load(html)
+                
+                $('p', html).each(function () {
+                    const text = $(this).text()
+                    let hyphen = text.lastIndexOf("—")
+                    let comma = text.lastIndexOf(",")
+                    let quote = text.substring(0, hyphen)
+                    let author = text.substring(hyphen + 2 )
+                    if(author.indexOf(",") !== -1){
+                        author = author.substring(0, author.indexOf(","))
+                    }
+                    resultFromScrape.push({
+                        quote,
+                        author
+                        })
+                })
+                resultFromScrape.forEach(obj => {
+                    let quoteObject = Object.fromEntries(Object.entries(obj).filter(([_, obj]) => obj != ""));
+                    if(Object.keys(quoteObject).length > 1){
+    
+                        scrapeWithOut.push(quoteObject)
+                    }
+                    })
+    
             })
-            resultFromScrape.forEach(obj => {
-                let quoteObject = Object.fromEntries(Object.entries(obj).filter(([_, obj]) => obj != ""));
-                if(Object.keys(quoteObject).length > 1){
-
-                    scrapeWithOut.push(quoteObject)
-                }
-              })
-
-        })
+    allQuotes = [...allQuotes, ...scrapeWithOut]
+}
 
 app.get('/quotes', (req, res) => {
     res.json(scrapeWithOut)
 })
 
 const goodReadsQuotes = []
-axios.get(websiteGoodReads)
-        .then(response => {
-            const html = response.data
-            const $ = cheerio.load(html)
-            $('.quoteText', html).each(function () {
-                const text = $(this).text()
-                const start = text.indexOf('')
-            let q = text.substring(start + 7, text.indexOf('―' ) - 8)
-            q = cleanStrings(q)
-            let author = text.substring(text.indexOf('―'))
-            let trimmedAuthor = cleanStrings(author)
-            if (author.indexOf(",") !== -1){
-                author = text.substring(text.indexOf('―'), text.lastIndexOf(',') )
-                trimmedAuthor = cleanStrings(author)
-            }
-              goodReadsQuotes.push({
-                           text: q,
-                           author: trimmedAuthor
-                        })
+const scrapeGoodReads = () => {
+    axios.get(websiteGoodReads)
+            .then(response => {
+                const html = response.data
+                const $ = cheerio.load(html)
+                $('.quoteText', html).each(function () {
+                    const text = $(this).text()
+                    const start = text.indexOf('')
+                let q = text.substring(start + 7, text.indexOf('―' ) - 8)
+                q = cleanStrings(q)
+                let author = text.substring(text.indexOf('―'))
+                let trimmedAuthor = cleanStrings(author)
+                if (author.indexOf(",") !== -1){
+                    author = text.substring(text.indexOf('―'), text.lastIndexOf(',') )
+                    trimmedAuthor = cleanStrings(author)
+                }
+                  goodReadsQuotes.push({
+                               text: q,
+                               author: trimmedAuthor
+                            })
+                })
             })
-        })
-            .catch(err => console.log(err))
+                .catch(err => console.log(err))
+    
+            app.get('/goodReads', (req, res) => {
 
-        app.get('/goodReads', (req, res) => {
-res.json(goodReadsQuotes)
+    res.json(goodReadsQuotes)
+    })
+    // console.log({goodReadsQuotes})
+    allQuotes = [...allQuotes, ...goodReadsQuotes]
+    console.log('completed all scrape', allQuotes.length)
+}
+
+let allQuotes = []
+
+const scrapeAll = () => {
+    // scrapeCosomo()
+    scrapeHarper()
+    scrapeElevate()
+    scrapeGoodReads()
+    scrapeGoodGood()
+}
+
+app.get('/all', (req, res) => {
+    scrapeAll()
+res.json(allQuotes)
 })
+
+app.get("/all/:authorId", async (req,res) => {
+    const authorId = req.params.authorId
+    let singleAuthor = allQuotes.filter( i => i.author.includes( authorId ) );
+    res.json(singleAuthor)
+})
+
 
 app.listen(PORT, () => console.log(`server running on PORT ${PORT}`))

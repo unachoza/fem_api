@@ -17,6 +17,7 @@ const websiteGoodReads = "https://www.goodreads.com/quotes/tag/feminism"
 const websiteAudible = "https://www.audible.com/blog/quotes-feminist"
 const websiteStylist = "https://www.stylist.co.uk/books/quotes/most-empowering-feminist-quotes-of-all-time-women-suffragette-feminism/61548"
 const websiteParade = "https://parade.com/971993/marynliles/feminist-quotes/"
+const webisteGoodHouseKeeping = "https://www.goodhousekeeping.com/life/g38335193/strong-women-quotes/"
 const resultFromScrape = []
  
 
@@ -37,6 +38,30 @@ const removeDuplicateEntries = (dataArray) => {
       return cleanDataArray
 }
 
+const resultsFromGoodHouseKeeping = []
+const scrapeGoodHouseKeeping = () => {
+    console.log("something")
+    axios.get(webisteGoodHouseKeeping)
+    .then(res =>{
+        const html = res.data
+        const $ = cheerio.load(html)
+        $("h2", html).each(function() {
+            let text = $(this).text()
+            // console.log({text})
+        })
+        $('p', html).each(function() {
+            let quote = $(this).text()
+            if(quote.includes(`${"'"}`)){
+
+                console.log({quote})
+            }
+        })
+    })
+    app.get('/a', (req,res) => {
+        res.json('all good')
+    })
+}
+scrapeGoodHouseKeeping()
 const resultsFromCosmo = []
 
 const scrapeCosomo = () => {
@@ -73,7 +98,7 @@ const scrapeHarper= () => {
         const html =  res.data
         const $ = cheerio.load(html)
         $('.css-106f026', html).each(function () {
-            let quote = $(this).text()
+            let quote = $(this).each()
             $(this).find('em').each(function () {
                 const author = $(this).text()
                 quote = quote.substring(0, quote.lastIndexOf(author))
@@ -195,9 +220,7 @@ const scrapeGoodReads = () => {
 
     res.json(goodReadsQuotes)
     })
-    // console.log({goodReadsQuotes})
     allQuotes = [...allQuotes, ...goodReadsQuotes]
-    console.log('completed all scrape', allQuotes.length)
 }
 
 let allQuotes = []
